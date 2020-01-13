@@ -36,7 +36,7 @@ public:
      * @return returns pointer to the element in the i cell
      * i case i is out of index for arr size return nullptr
      */
-    const Element* get_ptr_to_elem_for_index (unsigned int i) const;
+    Element* get_ptr_to_elem_for_index (unsigned int i) const;
 
     bool remove(const Element& element);
     unsigned int getCount() const;

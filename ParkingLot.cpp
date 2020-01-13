@@ -7,12 +7,15 @@
 #include "ParkingLotTypes.h"
 #include "UniqueArray.h"
 #include "ParkingLotPrinter.h"
+#include <algorithm>
+#include <vector>
 
 
 using ParkingLotUtils::ParkingResult;
 using ParkingLotUtils::ParkingSpot;
 using ParkingLotUtils::ParkingLotPrinter;
 using MtmParkingLot::partial_parking_lot;
+using std::vector;
 
 namespace MtmParkingLot {
     const unsigned int PARKING_TICKET = 250;
@@ -28,7 +31,7 @@ namespace MtmParkingLot {
 
 
 
-//typedef UniqueArray<Vehicle, Vehicle::CompareVehicles> partial_parking_lot; // i found the right way to do that ^^^ 666
+//typedef UniqueArray<Vehicle, Vehicle::areVehicleTheSame> partial_parking_lot; // i found the right way to do that ^^^ 666
 
     ParkingLot::ParkingLot(unsigned int parkingBlockSizes[]) :
             bike(parkingBlockSizes[0]), handi(parkingBlockSizes[1]),
@@ -36,12 +39,13 @@ namespace MtmParkingLot {
 
 
     ParkingResult
-    ParkingLot::enterParkingAUX(const Vehicle &current, partial_parking_lot &park, unsigned int &index) {
+    ParkingLot::enterParkingAUX(const Vehicle &current, partial_parking_lot &park, unsigned int &index, VehicleType section) {
         if (park.getIndex(current, index) == true) {
             return ParkingResult::VEHICLE_ALREADY_PARKED;
         } else {
             try {
                 index = park.insert(current);
+                park.get_ptr_to_elem_for_index(index)->setParkingSpot(index, section);
                 return ParkingResult::SUCCESS;
             } catch (partial_parking_lot::UniqueArrayIsFullException &e) {
                 return ParkingResult::NO_EMPTY_SPOT;
@@ -60,18 +64,18 @@ namespace MtmParkingLot {
         ParkingResult printTemp = ParkingResult::VEHICLE_NOT_FOUND; // def
 
         if (vehicleType == VehicleType::MOTORBIKE) {
-            printTemp = enterParkingAUX(current, bike, index);
+            printTemp = enterParkingAUX(current, bike, index, MOTORBIKE);
         } else if (vehicleType == VehicleType::CAR) {
-            printTemp = enterParkingAUX(current, car, index);
+            printTemp = enterParkingAUX(current, car, index, CAR);
         } else { // HANDICAPPED
             // need to be check or else we could park in HANDICAPPED even we already parked in CAR
             if (car.getIndex(current, index)) {
                 psType = VehicleType::CAR;
                 printTemp = ParkingResult::VEHICLE_ALREADY_PARKED;
             } else {
-                printTemp = enterParkingAUX(current, handi, index);
+                printTemp = enterParkingAUX(current, handi, index, HANDICAPPED);
                 if (printTemp == ParkingResult::NO_EMPTY_SPOT) { // try Car instead
-                    printTemp = enterParkingAUX(current, car, index);
+                    printTemp = enterParkingAUX(current, car, index, CAR);
                     psType = VehicleType::CAR;
                 }
             }
@@ -106,7 +110,7 @@ namespace MtmParkingLot {
 
         for (unsigned int i = 0; i < x.getSize(); ++i) {
             Vehicle *current = const_cast<Vehicle *>(x.get_ptr_to_elem_for_index(i));
-            if (current != nullptr && Over_Stay(current->entrance_time, inspectionTime)) {
+            if (current != nullptr && Over_Stay(current->getEntranceTime(), inspectionTime)) {
                 current->get_a_ticket();
                 counter++;
             }
@@ -149,9 +153,10 @@ namespace MtmParkingLot {
         return flag;
     }
 
+    // TODO del this
+    /*
     ostream &ParkingLot::printParkingLotAux(ostream &os,
-                                                           const partial_parking_lot &park,
-                                                           VehicleType currentType) const {
+            const partial_parking_lot &park, VehicleType currentType) const {
         for (unsigned int i = 0; i < park.getSize(); ++i) {
             const Vehicle *current = park.get_ptr_to_elem_for_index(i);
             if (current != nullptr) {
@@ -163,13 +168,35 @@ namespace MtmParkingLot {
         }
         return os; // not sure about that.... 666
     }
+     */
+
+    void addParkToVector(const partial_parking_lot& park, std::vector<Vehicle>& vec, VehicleType sector) {
+        for (unsigned int i = 0; i < park.getSize(); ++i) {
+            Vehicle *current = park.get_ptr_to_elem_for_index(i);
+            if (current != nullptr) {
+                current->setParkingSpot(i, sector);
+                vec.push_back(*current);
+            }
+        }
+    }
+
 
     ostream &operator<<(ostream &os, const ParkingLot &parkingLot) {
+
+        vector<Vehicle> allVehicle;
+
+        addParkToVector(parkingLot.bike,allVehicle, MOTORBIKE);
+        addParkToVector(parkingLot.handi,allVehicle, HANDICAPPED);
+        addParkToVector(parkingLot.car,allVehicle, CAR);
+
+        sort(allVehicle.begin(), allVehicle.end()); // TODO
+
         ParkingLotPrinter::printParkingLotTitle(os);
-        parkingLot.printParkingLotAux(os, parkingLot.bike, VehicleType::MOTORBIKE);
-        parkingLot.printParkingLotAux(os, parkingLot.handi, VehicleType::HANDICAPPED);
-        parkingLot.printParkingLotAux(os, parkingLot.car, VehicleType::CAR);
-        return os; // not sure about that.... 666
+        for (unsigned  int i = 0; i < allVehicle.size(); ++i) {
+            os << allVehicle[i];
+        }
+
+        return os;
     }
 
     static unsigned int min(unsigned int a, unsigned int b) {
@@ -218,17 +245,17 @@ namespace MtmParkingLot {
         using ParkingLotUtils::VehicleType;
         unsigned int the_bill = 0;
         if (vehicleType == VehicleType::MOTORBIKE) {
-            exiting_car_entrance_time = bike.get_ptr_to_elem_for_index(parking_num)->entrance_time;
+            exiting_car_entrance_time = bike.get_ptr_to_elem_for_index(parking_num)->getEntranceTime();
             if (bike.get_ptr_to_elem_for_index(parking_num)->did_he_get_a_ticket()) {
                 the_bill += PARKING_TICKET;
             }
         } else if (vehicleType == VehicleType::HANDICAPPED) {
-            exiting_car_entrance_time = handi.get_ptr_to_elem_for_index(parking_num)->entrance_time;
+            exiting_car_entrance_time = handi.get_ptr_to_elem_for_index(parking_num)->getEntranceTime();
             if (handi.get_ptr_to_elem_for_index(parking_num)->did_he_get_a_ticket()) {
                 the_bill += PARKING_TICKET;
             }
         } else if (vehicleType == VehicleType::CAR) {
-            exiting_car_entrance_time = car.get_ptr_to_elem_for_index(parking_num)->entrance_time;
+            exiting_car_entrance_time = car.get_ptr_to_elem_for_index(parking_num)->getEntranceTime();
             if (car.get_ptr_to_elem_for_index(parking_num)->did_he_get_a_ticket()) {
                 the_bill += PARKING_TICKET;
             }

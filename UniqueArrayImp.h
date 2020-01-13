@@ -92,7 +92,7 @@ const Element* UniqueArray<Element,Compare>::operator[] (const Element& element)
 }
 
 template <class Element,class Compare>
-const Element* UniqueArray<Element,Compare>::get_ptr_to_elem_for_index (unsigned int i) const{
+Element* UniqueArray<Element,Compare>::get_ptr_to_elem_for_index (unsigned int i) const{
     if (i>=size){
         return nullptr;
     }

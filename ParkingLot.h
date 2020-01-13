@@ -6,6 +6,7 @@
 #include "ParkingSpot.h"
 #include "UniqueArray.h"
 #include "Vehicle.h"
+#include "vector"
 
 namespace MtmParkingLot {
 
@@ -13,7 +14,7 @@ namespace MtmParkingLot {
     using std::ostream;
 
     // using for every time referencing to this type of template
-    typedef UniqueArray<Vehicle, Vehicle::CompareVehicles> partial_parking_lot;
+    typedef UniqueArray<Vehicle, Vehicle::areVehicleTheSame> partial_parking_lot;
 
     /**
      * @brief Represents parking lot divided to 3 section
@@ -32,11 +33,13 @@ namespace MtmParkingLot {
          * @param current a vehicle we want to check if inside the parking lot
          * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles>
          * @param index if current is inside park or if insert it assign its index (in UA) into index
+         * @param section the section where the vehcile try to park bike/handi/car
          * @return ParkingResult: SUCCESS if insert, VEHICLE_ALREADY_PARKED if already in park,
          * and NO_EMPTY_SPOT if the park if full
          */
         ParkingResult enterParkingAUX(const Vehicle& current,
-                partial_parking_lot& park, unsigned int& index);
+                partial_parking_lot& park, unsigned int& index,
+                VehicleType section);
 
         /**
          * @brief auxiliary func check if a given vehicle is parking inside given parking lot
@@ -59,6 +62,10 @@ namespace MtmParkingLot {
          */
         ostream& printParkingLotAux(ostream& os,
                 const partial_parking_lot& park, VehicleType currentType) const;
+
+
+        // TODO
+        void addParkToVector(const partial_parking_lot& park, std::vector<Vehicle>& vec, VehicleType sector);
 
 
         /**

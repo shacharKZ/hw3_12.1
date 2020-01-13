@@ -6,6 +6,7 @@
 #include "Time.h"
 #include "ParkingSpot.h"
 #include "ParkingLotPrinter.h"
+#include "Vehicle.h"
 
 using std::cout;
 
@@ -18,6 +19,7 @@ using ParkingLotUtils::CAR;
 using MtmParkingLot::ParkingLot;
 using MtmParkingLot::ParkingSpot;
 using MtmParkingLot::ParkingLotPrinter;
+using MtmParkingLot::Vehicle;
 
 int main(){
     Time initial(0,0,0);
@@ -46,6 +48,7 @@ int main(){
     pl.enterParking(MOTORBIKE, "bike5", initial);
     pl.enterParking(HANDICAPPED, "handi5", initial);
     pl.enterParking(CAR, "car5", initial);
+    /*
 
     cout << "------------ exiting after 0 time -------------" << std::endl << std::endl;
 
@@ -88,7 +91,7 @@ int main(){
 
 
 
-
+*/
 
 
 
@@ -208,6 +211,26 @@ int main(){
 
     cout << pl;
 */
+
+
+    ParkingLot pl2 (arr2);
+    pl.enterParking(MOTORBIKE, "1", initial);
+    pl.enterParking(MOTORBIKE, "2", initial);
+    pl.enterParking(MOTORBIKE, "3", initial);
+
+
+    Vehicle r1 (MOTORBIKE, "111", initial);
+
+    r1.setParkingSpot(1, MOTORBIKE);
+
+    Vehicle r2 (HANDICAPPED, "222", initial);
+
+    r1.setParkingSpot(2, HANDICAPPED);
+
+    cout << pl;
+
+
+
 
     return 0;
 }
