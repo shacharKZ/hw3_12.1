@@ -99,7 +99,7 @@ namespace MtmParkingLot {
          *
          * @return vehicleType
          */
-        const VehicleType getVehicleType();
+        const VehicleType getVehicleType() const;
 
         /**
          * @brief get the vehicle's type

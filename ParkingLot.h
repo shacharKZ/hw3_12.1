@@ -34,12 +34,15 @@ namespace MtmParkingLot {
          * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles>
          * @param index if current is inside park or if insert it assign its index (in UA) into index
          * @param section the section where the vehcile try to park bike/handi/car
+         * @param  timeIfAlreadyPark in case the vehcile is already parking we want to know when did it enter the park
          * @return ParkingResult: SUCCESS if insert, VEHICLE_ALREADY_PARKED if already in park,
          * and NO_EMPTY_SPOT if the park if full
          */
         ParkingResult enterParkingAUX(const Vehicle& current,
-                partial_parking_lot& park, unsigned int& index,
-                VehicleType section);
+                                      partial_parking_lot& park,
+                                      unsigned int& index,
+                                      Time& timeIfAlreadyPark,
+                                      VehicleType section);
 
         /**
          * @brief auxiliary func check if a given vehicle is parking inside given parking lot
@@ -50,7 +53,7 @@ namespace MtmParkingLot {
          * @return  true if current is inside park, false otherwise
          */
         bool getParkingSpotAUX(Vehicle current, unsigned int& index,
-                const partial_parking_lot& park) const ;
+                               const partial_parking_lot& park) const ;
 
         /**
          * @brief auxiliary func print all the cars parking inside given parking lot
@@ -61,7 +64,7 @@ namespace MtmParkingLot {
          * @return  os
          */
         ostream& printParkingLotAux(ostream& os,
-                const partial_parking_lot& park, VehicleType currentType) const;
+                                    const partial_parking_lot& park, VehicleType currentType) const;
 
 
         // TODO
@@ -79,8 +82,8 @@ namespace MtmParkingLot {
          * @return  sum that the given vehicle need to pay
          */
         unsigned int pay_day(Time exitTime, ParkingLotUtils::
-        VehicleType vehicleType, unsigned int parking_num,
-        Time& exiting_car_entrance_time);
+        VehicleType vehicleType, VehicleType lot, unsigned int parking_num,
+                             Time& exiting_car_entrance_time);
 
         /**
          * @brief auxiliary func remove a given vehicle from a given parking represents by an int
@@ -90,7 +93,7 @@ namespace MtmParkingLot {
          */
         void remove_vehicle (VehicleType vehicleType, unsigned int parking_num);
 
-            public:
+    public:
 
         ParkingLot(unsigned int parkingBlockSizes[]);
         ~ParkingLot() = default;

@@ -51,7 +51,7 @@ namespace MtmParkingLot {
         return entrance_time;
     }
 
-    const VehicleType Vehicle::getVehicleType() {
+    const VehicleType Vehicle::getVehicleType() const {
         return vehicleType;
     }
 

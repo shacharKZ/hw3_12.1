@@ -39,8 +39,9 @@ namespace MtmParkingLot {
 
 
     ParkingResult
-    ParkingLot::enterParkingAUX(const Vehicle &current, partial_parking_lot &park, unsigned int &index, VehicleType section) {
+    ParkingLot::enterParkingAUX(const Vehicle &current, partial_parking_lot &park, unsigned int &index, Time& timeIfAlreadyPark, VehicleType section) {
         if (park.getIndex(current, index) == true) {
+            timeIfAlreadyPark = park.get_ptr_to_elem_for_index(index)->getEntranceTime();
             return ParkingResult::VEHICLE_ALREADY_PARKED;
         } else {
             try {
@@ -63,26 +64,28 @@ namespace MtmParkingLot {
         // parked (two options) or else the print func might be wrong
         ParkingResult printTemp = ParkingResult::VEHICLE_NOT_FOUND; // def
 
+        Time timeIfAlreadyPark = entranceTime;
+
         if (vehicleType == VehicleType::MOTORBIKE) {
-            printTemp = enterParkingAUX(current, bike, index, MOTORBIKE);
+            printTemp = enterParkingAUX(current, bike, index, timeIfAlreadyPark, MOTORBIKE);
         } else if (vehicleType == VehicleType::CAR) {
-            printTemp = enterParkingAUX(current, car, index, CAR);
+            printTemp = enterParkingAUX(current, car, index, timeIfAlreadyPark, CAR);
         } else { // HANDICAPPED
             // need to be check or else we could park in HANDICAPPED even we already parked in CAR
             if (car.getIndex(current, index)) {
                 psType = VehicleType::CAR;
                 printTemp = ParkingResult::VEHICLE_ALREADY_PARKED;
             } else {
-                printTemp = enterParkingAUX(current, handi, index, HANDICAPPED);
+                printTemp = enterParkingAUX(current, handi, index, timeIfAlreadyPark, HANDICAPPED);
                 if (printTemp == ParkingResult::NO_EMPTY_SPOT) { // try Car instead
-                    printTemp = enterParkingAUX(current, car, index, CAR);
+                    printTemp = enterParkingAUX(current, car, index,timeIfAlreadyPark, CAR);
                     psType = VehicleType::CAR;
                 }
             }
         }
 
         // printing message and return arg according to enterParkingAUX result
-        ParkingLotPrinter::printVehicle(cout, vehicleType, licensePlate, entranceTime);
+        ParkingLotPrinter::printVehicle(cout, vehicleType, licensePlate, timeIfAlreadyPark);
         if (printTemp == ParkingResult::SUCCESS) {
             ParkingSpot sp(psType, index);
             ParkingLotPrinter::printEntrySuccess(cout, sp);
@@ -105,12 +108,14 @@ namespace MtmParkingLot {
         return (delta.toHours() > HOURS_PER_DAY);
     }
 
-    void
-    Give_the_ticket_to_those_who_deserve_it(const partial_parking_lot &x, Time inspectionTime, unsigned int &counter) {
+    void Give_the_ticket_to_those_who_deserve_it
+            (const partial_parking_lot &x, Time inspectionTime, unsigned int &counter) {
 
         for (unsigned int i = 0; i < x.getSize(); ++i) {
             Vehicle *current = const_cast<Vehicle *>(x.get_ptr_to_elem_for_index(i));
-            if (current != nullptr && Over_Stay(current->getEntranceTime(), inspectionTime)) {
+
+            if (current != nullptr && current->did_he_get_a_ticket() == false &&
+                Over_Stay(current->getEntranceTime(), inspectionTime)) {
                 current->get_a_ticket();
                 counter++;
             }
@@ -127,7 +132,7 @@ namespace MtmParkingLot {
     }
 
     bool ParkingLot::getParkingSpotAUX(Vehicle current,
-                                                      unsigned int &index, const partial_parking_lot &park) const {
+                                       unsigned int &index, const partial_parking_lot &park) const {
         return park.getIndex(current, index);
     }
 
@@ -206,7 +211,7 @@ namespace MtmParkingLot {
         return b;
     }
 
-    static unsigned int bill_calculator(Time entrance, Time exit, ParkingLotUtils::VehicleType vehicleType) {
+    static unsigned int bill_calculator(Time entrance, Time exit, VehicleType vehicleType) {
 
         unsigned sum = 0;
         ParkingLotUtils::Time delta = exit - entrance;
@@ -240,21 +245,28 @@ namespace MtmParkingLot {
         return sum;
     }
 
-    unsigned int ParkingLot::pay_day(Time exitTime, ParkingLotUtils::VehicleType vehicleType,
-                                                    unsigned int parking_num, Time &exiting_car_entrance_time) {
-        using ParkingLotUtils::VehicleType;
+
+    unsigned int ParkingLot::pay_day(Time exitTime, VehicleType vehicleType, VehicleType lot,
+                                     unsigned int parking_num, Time &exiting_car_entrance_time) {
         unsigned int the_bill = 0;
-        if (vehicleType == VehicleType::MOTORBIKE) {
+        if (vehicleType == MOTORBIKE) {
             exiting_car_entrance_time = bike.get_ptr_to_elem_for_index(parking_num)->getEntranceTime();
             if (bike.get_ptr_to_elem_for_index(parking_num)->did_he_get_a_ticket()) {
                 the_bill += PARKING_TICKET;
             }
-        } else if (vehicleType == VehicleType::HANDICAPPED) {
-            exiting_car_entrance_time = handi.get_ptr_to_elem_for_index(parking_num)->getEntranceTime();
-            if (handi.get_ptr_to_elem_for_index(parking_num)->did_he_get_a_ticket()) {
+        } else if (vehicleType == HANDICAPPED) {
+            Vehicle *temp;
+            if (lot == CAR){
+                temp = car.get_ptr_to_elem_for_index(parking_num);
+            } else{
+                temp = handi.get_ptr_to_elem_for_index(parking_num);
+            }
+            exiting_car_entrance_time = temp->getEntranceTime();
+            if (temp->did_he_get_a_ticket()) {
                 the_bill += PARKING_TICKET;
             }
-        } else if (vehicleType == VehicleType::CAR) {
+
+        } else if (vehicleType == CAR) {
             exiting_car_entrance_time = car.get_ptr_to_elem_for_index(parking_num)->getEntranceTime();
             if (car.get_ptr_to_elem_for_index(parking_num)->did_he_get_a_ticket()) {
                 the_bill += PARKING_TICKET;
@@ -281,18 +293,30 @@ namespace MtmParkingLot {
     ParkingResult ParkingLot::exitParking(LicensePlate licensePlate, Time exitTime) {
         using ParkingLotUtils::ParkingSpot;
         ParkingSpot exiting_vehicle_spot;
+
         if (getParkingSpot(licensePlate, exiting_vehicle_spot) == ParkingResult::VEHICLE_NOT_FOUND) {
             ParkingLotUtils::ParkingLotPrinter::printExitFailure(cout, licensePlate);
             return ParkingResult::VEHICLE_NOT_FOUND;
         }
         Time exiting_vehicle_entrance_time;
-        unsigned int bill = pay_day(exitTime, exiting_vehicle_spot.getParkingBlock(),
-                                    exiting_vehicle_spot.getParkingNumber(), exiting_vehicle_entrance_time);
-        ParkingLotUtils::ParkingLotPrinter::printVehicle(cout, exiting_vehicle_spot.getParkingBlock(), licensePlate,
-                                                         exiting_vehicle_entrance_time);
-        ParkingLotUtils::ParkingLotPrinter::printExitSuccess(cout, exiting_vehicle_spot, exitTime, bill);
+        Vehicle temp_vehicle = Vehicle(MOTORBIKE, licensePlate, exitTime);
+        VehicleType vehicleType = CAR, block = exiting_vehicle_spot.getParkingBlock();
+        if (block == CAR){
+            vehicleType = car[temp_vehicle]->getVehicleType();
+        } else if (block == MOTORBIKE){
+            vehicleType = MOTORBIKE;
+        } else if (block == HANDICAPPED){
+            vehicleType = HANDICAPPED;
+        }
+        unsigned int bill = pay_day(exitTime, vehicleType, block,
+                                    exiting_vehicle_spot.getParkingNumber(),
+                                    exiting_vehicle_entrance_time);
+        ParkingLotUtils::ParkingLotPrinter::printVehicle(cout,
+                                                         vehicleType, licensePlate, exiting_vehicle_entrance_time);
+        ParkingLotUtils::ParkingLotPrinter::printExitSuccess(cout,
+                                                             exiting_vehicle_spot, exitTime, bill);
         ParkingLot::remove_vehicle(exiting_vehicle_spot.getParkingBlock(),
-                                                  exiting_vehicle_spot.getParkingNumber());
+                                   exiting_vehicle_spot.getParkingNumber());
         return ParkingLotUtils::ParkingResult::SUCCESS;
 
     }
