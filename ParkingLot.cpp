@@ -158,22 +158,6 @@ namespace MtmParkingLot {
         return flag;
     }
 
-    // TODO del this
-    /*
-    ostream &ParkingLot::printParkingLotAux(ostream &os,
-            const partial_parking_lot &park, VehicleType currentType) const {
-        for (unsigned int i = 0; i < park.getSize(); ++i) {
-            const Vehicle *current = park.get_ptr_to_elem_for_index(i);
-            if (current != nullptr) {
-                ParkingLotPrinter::printVehicle(os, current->vehicleType,
-                                                current->licensePlate, current->entrance_time);
-                ParkingSpot psCurrent = ParkingSpot(currentType, i);
-                ParkingLotPrinter::printParkingSpot(os, psCurrent);
-            }
-        }
-        return os; // not sure about that.... 666
-    }
-     */
 
     void addParkToVector(const partial_parking_lot& park, std::vector<Vehicle>& vec, VehicleType sector) {
         for (unsigned int i = 0; i < park.getSize(); ++i) {
