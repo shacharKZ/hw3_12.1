@@ -34,26 +34,33 @@ namespace MtmParkingLot {
          * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles>
          * @param index if current is inside park or if insert it assign its index (in UA) into index
          * @param section the section where the vehcile try to park bike/handi/car
-         * @param  timeIfAlreadyPark in case the vehcile is already parking we want to know when did it enter the park
          * @return ParkingResult: SUCCESS if insert, VEHICLE_ALREADY_PARKED if already in park,
          * and NO_EMPTY_SPOT if the park if full
          */
-        ParkingResult enterParkingAUX(const Vehicle& current,
+        ParkingResult enterParkingAUX(Vehicle& current,
                                       partial_parking_lot& park,
                                       unsigned int& index,
-                                      Time& timeIfAlreadyPark,
                                       VehicleType section);
 
         /**
-         * @brief auxiliary func check if a given vehicle is parking inside given parking lot
+         * @brief auxiliary func check if a given vehicle is parking inside given parking lot and return it by ref
          *
-         * @param current a vehicle we want to check if inside the parking lot
+         * @param current a vehicle we want to check if inside the parking lot. if is inside, the vehicle is also assign into the vehicle
          * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles>
          * @param index if current is inside park or if insert it assign its index (in UA) into index
          * @return  true if current is inside park, false otherwise
          */
-        bool getParkingSpotAUX(Vehicle current, unsigned int& index,
+        bool getVehicleAUX(Vehicle& current, unsigned int& index,
                                const partial_parking_lot& park) const ;
+
+        /**
+         * @brief auxiliary func check if a given vehicle is parking inside ParkingLot
+         *
+         * @param current a vehicle we want to check if inside the parking lot. if is inside, the vehicle is also assign into the vehicle
+         * @param index if current is inside park or if insert it assign its index (in UA) into index
+         * @return  true if current is inside park, false otherwise
+         */
+        bool getVehicle(Vehicle& current, unsigned int& index) const ;
 
         /**
          * @brief auxiliary func print all the cars parking inside given parking lot

@@ -17,15 +17,6 @@ namespace MtmParkingLot {
             entrance_time(other.entrance_time),
             got_a_ticket(other.got_a_ticket), whereIPark(other.whereIPark) {}
 
-            /* // TODO
-    void Vehicle::operator=(const Vehicle& other) {
-        got_a_ticket = other.got_a_ticket;
-        whereIPark = ParkingSpot(other.whereIPark);
-        vehicleType = other.vehicleType;
-        licensePlate = other.licensePlate;
-        entrance_time = other.entrance_time;
-    }
-             */
 
     void Vehicle::get_a_ticket() {
         this->got_a_ticket = true;

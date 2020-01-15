@@ -1,7 +1,3 @@
-//
-// Created by eilon on 09/01/2020.
-//
-
 #include "ParkingLot.h"
 #include "UniqueArray.h"
 #include "ParkingLotTypes.h"
@@ -29,28 +25,20 @@ namespace MtmParkingLot {
 
 
 
-
-
-//typedef UniqueArray<Vehicle, Vehicle::areVehicleTheSame> partial_parking_lot; // i found the right way to do that ^^^ 666
-
     ParkingLot::ParkingLot(unsigned int parkingBlockSizes[]) :
             bike(parkingBlockSizes[0]), handi(parkingBlockSizes[1]),
             car(parkingBlockSizes[2]) {}
 
 
     ParkingResult
-    ParkingLot::enterParkingAUX(const Vehicle &current, partial_parking_lot &park, unsigned int &index, Time& timeIfAlreadyPark, VehicleType section) {
-        if (park.getIndex(current, index) == true) {
-            timeIfAlreadyPark = park.get_ptr_to_elem_for_index(index)->getEntranceTime();
-            return ParkingResult::VEHICLE_ALREADY_PARKED;
-        } else {
-            try {
-                index = park.insert(current);
-                park.get_ptr_to_elem_for_index(index)->setParkingSpot(index, section);
-                return ParkingResult::SUCCESS;
-            } catch (partial_parking_lot::UniqueArrayIsFullException &e) {
-                return ParkingResult::NO_EMPTY_SPOT;
-            }
+    ParkingLot::enterParkingAUX(Vehicle &current, partial_parking_lot &park, unsigned int &index, VehicleType section) {
+        try {
+            index = park.insert(current);
+            park.get_ptr_to_elem_for_index(index)->setParkingSpot(index, section);
+            current = *park[current];
+            return ParkingResult::SUCCESS;
+        } catch (partial_parking_lot::UniqueArrayIsFullException &e) {
+            return ParkingResult::NO_EMPTY_SPOT;
         }
         return ParkingResult::VEHICLE_NOT_FOUND; // def. will not be used
     }
@@ -60,46 +48,35 @@ namespace MtmParkingLot {
     ParkingLot::enterParking(VehicleType vehicleType, LicensePlate licensePlate, Time entranceTime) {
         Vehicle current = Vehicle(vehicleType, licensePlate, entranceTime);
         unsigned int index = 0; // car parking num
-        VehicleType psType = vehicleType; // used to indicate where HANDICAPPED
-        // parked (two options) or else the print func might be wrong
+        if (getVehicle(current,index) == true) {
+            ParkingLotPrinter::printVehicle(cout, vehicleType, licensePlate,
+                    current.getEntranceTime());
+            ParkingLotPrinter::printEntryFailureAlreadyParked(cout,
+                    current.getParkingSpot());
+            return ParkingResult::VEHICLE_ALREADY_PARKED;
+        }
+
         ParkingResult printTemp = ParkingResult::VEHICLE_NOT_FOUND; // def
-
-        Time timeIfAlreadyPark = entranceTime;
-
         if (vehicleType == VehicleType::MOTORBIKE) {
-            printTemp = enterParkingAUX(current, bike, index, timeIfAlreadyPark, MOTORBIKE);
+            printTemp = enterParkingAUX(current, bike, index, MOTORBIKE);
         } else if (vehicleType == VehicleType::CAR) {
-            printTemp = enterParkingAUX(current, car, index, timeIfAlreadyPark, CAR);
+            printTemp = enterParkingAUX(current, car, index, CAR);
         } else { // HANDICAPPED
-            // need to be check or else we could park in HANDICAPPED even we already parked in CAR
-            if (car.getIndex(current, index)) {
-                psType = VehicleType::CAR;
-                printTemp = ParkingResult::VEHICLE_ALREADY_PARKED;
-            } else {
-                printTemp = enterParkingAUX(current, handi, index, timeIfAlreadyPark, HANDICAPPED);
-                if (printTemp == ParkingResult::NO_EMPTY_SPOT) { // try Car instead
-                    printTemp = enterParkingAUX(current, car, index,timeIfAlreadyPark, CAR);
-                    psType = VehicleType::CAR;
-                }
+            printTemp = enterParkingAUX(current, handi, index, HANDICAPPED);
+            if (printTemp == ParkingResult::NO_EMPTY_SPOT) {
+                printTemp = enterParkingAUX(current, car, index, CAR);
             }
         }
 
         // printing message and return arg according to enterParkingAUX result
-        ParkingLotPrinter::printVehicle(cout, vehicleType, licensePlate, timeIfAlreadyPark);
+        ParkingLotPrinter::printVehicle(cout, vehicleType, licensePlate, entranceTime);
         if (printTemp == ParkingResult::SUCCESS) {
-            ParkingSpot sp(psType, index);
-            ParkingLotPrinter::printEntrySuccess(cout, sp);
+            ParkingLotPrinter::printEntrySuccess(cout, current.getParkingSpot());
             return ParkingResult::SUCCESS;
-        } else if (printTemp == ParkingResult::VEHICLE_ALREADY_PARKED) {
-            ParkingSpot sp(psType, index);
-            ParkingLotPrinter::printEntryFailureAlreadyParked(cout, sp);
-            return ParkingResult::VEHICLE_ALREADY_PARKED;
-        } else { // only possible: ParkingResult::NO_EMPTY_SPOT
-            ParkingLotPrinter::printEntryFailureNoSpot(cout);
         }
+        ParkingLotPrinter::printEntryFailureNoSpot(cout);
         return ParkingResult::NO_EMPTY_SPOT; // def return and only possible option
     }
-
 
     bool Over_Stay(Time initial, Time final) {
         using ParkingLotUtils::Time;
@@ -131,31 +108,37 @@ namespace MtmParkingLot {
         ParkingLotPrinter::printInspectionResult(cout, inspectionTime, counter);
     }
 
-    bool ParkingLot::getParkingSpotAUX(Vehicle current,
-                                       unsigned int &index, const partial_parking_lot &park) const {
-        return park.getIndex(current, index);
+    bool ParkingLot::getVehicleAUX(Vehicle& current, unsigned int &index,
+            const partial_parking_lot &park) const {
+        if (park.getIndex(current, index) == true) {
+            current = *park[current];
+            return true;
+        }
+        return false;
+    }
+
+    bool ParkingLot::getVehicle(Vehicle& current, unsigned int& index) const {
+        if (getVehicleAUX(current, index, bike)) {
+            return true;
+        } else if (getVehicleAUX(current, index, handi)) {
+            return true;
+        } else if (getVehicleAUX(current, index, car)) {
+            return true;
+        }
+        return false;
     }
 
 
     ParkingResult ParkingLot::getParkingSpot(LicensePlate licensePlate, ParkingSpot &parkingSpot) const {
-        Vehicle tempSerch = Vehicle(VehicleType::CAR, licensePlate, Time());
+        Vehicle temp = Vehicle(VehicleType::CAR, licensePlate, Time());
         unsigned int index = 0;
-        VehicleType psType = VehicleType::MOTORBIKE;
-        ParkingResult flag = ParkingResult::VEHICLE_NOT_FOUND;
-        if (getParkingSpotAUX(tempSerch, index, bike)) {
-            flag = ParkingResult::SUCCESS;
-        } else if (getParkingSpotAUX(tempSerch, index, handi)) {
-            psType = VehicleType::HANDICAPPED;
-            flag = ParkingResult::SUCCESS;
-        } else if (getParkingSpotAUX(tempSerch, index, car)) {
-            psType = VehicleType::CAR;
-            flag = ParkingResult::SUCCESS;
-        }
+        bool flag = getVehicle(temp, index);
 
-        if (flag == ParkingResult::SUCCESS) {
-            parkingSpot = ParkingSpot(psType, index);
+        if (flag == true) {
+            parkingSpot = ParkingSpot(temp.getParkingSpot());
+            return SUCCESS;
         }
-        return flag;
+        return ParkingResult::VEHICLE_NOT_FOUND;
     }
 
 
@@ -178,7 +161,7 @@ namespace MtmParkingLot {
         addParkToVector(parkingLot.handi,allVehicle, HANDICAPPED);
         addParkToVector(parkingLot.car,allVehicle, CAR);
 
-        sort(allVehicle.begin(), allVehicle.end()); // TODO
+        sort(allVehicle.begin(), allVehicle.end());
 
         ParkingLotPrinter::printParkingLotTitle(os);
         for (unsigned  int i = 0; i < allVehicle.size(); ++i) {
@@ -188,7 +171,7 @@ namespace MtmParkingLot {
         return os;
     }
 
-    static unsigned int min(unsigned int a, unsigned int b) {
+    static unsigned int min(unsigned int a, unsigned int b) { // TODO why?
         if (a < b) {
             return a;
         }
@@ -207,7 +190,7 @@ namespace MtmParkingLot {
             if (delta.toHours() == 1) {
                 return BIKE_FIRST_HOUR;
             }
-            sum += BIKE_FIRST_HOUR;
+            sum += BIKE_FIRST_HOUR; // TODO merge to a new func?
             unsigned int hours_to_pay_for = min(MAX_HOURS_TO_PAY_FOR_AFTER_DEDUCTION_OF_FIRST, (delta.toHours() - 1));
             for (unsigned int i = 0; i < hours_to_pay_for; ++i) {
                 sum += BIKE_OTHER_HOURS;
@@ -262,6 +245,7 @@ namespace MtmParkingLot {
 
     void ParkingLot::remove_vehicle(VehicleType vehicleType, unsigned int parking_num) {
 
+        // TODO why not using remove(element) when element is dummyVehicle with the same licensePlate?
         if (vehicleType == MOTORBIKE) {
             bike.remove(*(bike.get_ptr_to_elem_for_index(parking_num)));
         }
