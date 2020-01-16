@@ -135,7 +135,7 @@ unsigned int UniqueArray<Element,Compare>::getSize() const{
 
 template <class Element,class Compare>
 UniqueArray<Element,Compare> UniqueArray<Element,Compare>::filter(const Filter& f) const {
-    UniqueArray ua (size); // TODO just changed from dinamic to simple
+    UniqueArray ua (size);
     for (int i = 0; i < size ; ++i) {
         if (arr[i] != nullptr && (f(*(arr[i])))){
             ua.arr[i] = new Element(*(arr[i]));

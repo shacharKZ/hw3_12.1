@@ -78,8 +78,7 @@ namespace MtmParkingLot {
     }
 
     bool Over_Stay(Time initial, Time final) {
-        using ParkingLotUtils::Time; // TODO no need
-        static const Time::Hour HOURS_PER_DAY = 24; // TODO cant
+        const Time::Hour HOURS_PER_DAY = 24;
         Time delta = (final - initial);
         return (delta.toHours() > HOURS_PER_DAY);
     }
@@ -88,7 +87,7 @@ namespace MtmParkingLot {
             (const partial_parking_lot &x, Time inspectionTime, unsigned int &counter) {
 
         for (unsigned int i = 0; i < x.getSize(); ++i) {
-            Vehicle *current = const_cast<Vehicle *>(x.get_ptr_to_elem_for_index(i)); // TODO const_cast?
+            Vehicle *current = (x.get_ptr_to_elem_for_index(i));
 
             if (current != nullptr && current->did_he_get_a_ticket() == false &&
                 Over_Stay(current->getEntranceTime(), inspectionTime)) {
@@ -179,20 +178,20 @@ namespace MtmParkingLot {
         if (delta.toHours() == 0) {
             return sum;
         }
-        if (vehicleType == VehicleType::MOTORBIKE) {
+        if (vehicleType == MOTORBIKE) {
             if (delta.toHours() == 1) {
                 return BIKE_FIRST_HOUR;
             }
-            sum += BIKE_FIRST_HOUR; // TODO merge to a new func?
+            sum += BIKE_FIRST_HOUR;
             unsigned int hours_to_pay_for = min(MAX_HOURS_TO_PAY_FOR_AFTER_DEDUCTION_OF_FIRST, (delta.toHours() - 1));
             for (unsigned int i = 0; i < hours_to_pay_for; ++i) {
                 sum += BIKE_OTHER_HOURS;
             }
         }
-        if (vehicleType == VehicleType::HANDICAPPED) {
+        if (vehicleType == HANDICAPPED) {
             sum = HANDI_FIXED_PRICE;
         }
-        if (vehicleType == VehicleType::CAR) {
+        if (vehicleType == CAR) {
             if (delta.toHours() == 1) {
                 return CAR_FIRST_HOUR;
             }
@@ -261,7 +260,6 @@ namespace MtmParkingLot {
 
 
     ParkingResult ParkingLot::exitParking(LicensePlate licensePlate, Time exitTime) {
-        using ParkingLotUtils::ParkingSpot; // TODO cant
         ParkingSpot exiting_vehicle_spot;
         // TODO just use getVehicle
 
@@ -287,7 +285,7 @@ namespace MtmParkingLot {
 
 
         if (getParkingSpot(licensePlate, exiting_vehicle_spot) == ParkingResult::VEHICLE_NOT_FOUND) {
-            ParkingLotUtils::ParkingLotPrinter::printExitFailure(cout, licensePlate); // TODO no need to _::_::_
+            ParkingLotPrinter::printExitFailure(cout, licensePlate);
             return ParkingResult::VEHICLE_NOT_FOUND;
         }
         Time exiting_vehicle_entrance_time;
