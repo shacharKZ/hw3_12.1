@@ -74,7 +74,13 @@ namespace MtmParkingLot {
                                     const partial_parking_lot& park, VehicleType currentType) const;
 
 
-        // TODO
+        /**
+         * @brief adds every vehicle in the park (section in ParkingLot) into a given vector
+         *
+         * @param park section in parkingLot
+         * @param vec Vector
+         * @param sector to inform which sector is it
+         */
         void addParkToVector(const partial_parking_lot& park, std::vector<Vehicle>& vec, VehicleType sector);
 
 
