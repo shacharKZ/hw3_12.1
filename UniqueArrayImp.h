@@ -8,16 +8,16 @@ using std::cout;
 //constructor
 template <class Element,class Compare>
 UniqueArray<Element,Compare>::UniqueArray(unsigned int size):
-    size(size), arr(new Element*[size]) {
-        for (unsigned int i = 0; i < size; ++i) {
-            arr[i] = nullptr;
+        size(size), arr(new Element*[size]) {
+    for (unsigned int i = 0; i < size; ++i) {
+        arr[i] = nullptr;
     }
 }
 
 //copy constructor
 template <class Element,class Compare>
 UniqueArray<Element,Compare>::UniqueArray(const UniqueArray& other):
-    size(other.size), arr(new Element*[other.size]) {
+        size(other.size), arr(new Element*[other.size]) {
     for (int i = 0; i < size; i++) {
 
         if (other.arr[i] != nullptr) {
@@ -58,7 +58,7 @@ bool UniqueArray<Element,Compare>::getIndex(const Element& element, unsigned int
 }
 
 template <class Element,class Compare>
-unsigned int UniqueArray<Element,Compare>::find_first_empty() {
+unsigned int UniqueArray<Element,Compare>::findFirstEmpty() {
     for (int i=0; i<size; i++){
         if (arr[i] == nullptr){
             return i;
@@ -74,17 +74,13 @@ unsigned int UniqueArray<Element,Compare>::insert(const Element& element){
     if (getIndex(element, i)){
         return i;
     }
-    unsigned int j = find_first_empty();
+    unsigned int j = findFirstEmpty();
     arr[j] = new Element(element);
     return j;
 }
 
 template <class Element,class Compare>
-const Element* UniqueArray<Element,Compare>::operator[] (const Element& element) const { // CONST on an copy???
-//    Compare compFunc;
-//    if (compFunc(element, NULL)) { // or ==
-//        return nullptr;
-//    }
+const Element* UniqueArray<Element,Compare>::operator[] (const Element& element) const {
     unsigned int i = 0;
     if(getIndex(element, i)){
         return arr[i];
@@ -93,8 +89,8 @@ const Element* UniqueArray<Element,Compare>::operator[] (const Element& element)
 }
 
 template <class Element,class Compare>
-Element* UniqueArray<Element,Compare>::get_ptr_to_elem_for_index (unsigned int i) const{
-    if (i>=size){
+Element* UniqueArray<Element,Compare>::ptrForIndex (unsigned int i) const{
+    if (i>=size || i<0){
         return nullptr;
     }
     return arr[i];
@@ -103,10 +99,6 @@ Element* UniqueArray<Element,Compare>::get_ptr_to_elem_for_index (unsigned int i
 
 template <class Element,class Compare>
 bool UniqueArray<Element,Compare>::remove(const Element& element){
-//    Compare compFunc;
-//    if (compFunc(element, NULL)) { // or == ???
-//        return false;
-//    }
     unsigned int i = 0;
     if(getIndex(element, i)){
         delete arr[i];

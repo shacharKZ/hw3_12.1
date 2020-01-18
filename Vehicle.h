@@ -118,14 +118,14 @@ namespace MtmParkingLot {
         /**
          * @brief change got_a_ticket to True, representing inspection gave the car a ticket
          */
-        void get_a_ticket();
+        void giveATicket();
 
         /**
          * @brief return the value of got_a_ticket
          *
          * @return the value of got_a_ticket
          */
-        bool did_he_get_a_ticket() const;
+        bool didHeGotATicket() const;
     };
 }
 

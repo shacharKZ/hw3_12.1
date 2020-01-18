@@ -18,11 +18,11 @@ namespace MtmParkingLot {
             got_a_ticket(other.got_a_ticket), whereIPark(other.whereIPark) {}
 
 
-    void Vehicle::get_a_ticket() {
+    void Vehicle::giveATicket() {
         this->got_a_ticket = true;
     }
 
-    bool Vehicle::did_he_get_a_ticket() const {
+    bool Vehicle::didHeGotATicket() const {
         return got_a_ticket ? true : false;
     }
 

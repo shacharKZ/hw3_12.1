@@ -18,7 +18,7 @@ class UniqueArray {
      * @throw UniqueArrayIsFullException in case of full arr
      * @return returns the index of the first empty cell inside arr
      */
-    unsigned int find_first_empty();
+    unsigned int findFirstEmpty();
 
 public:
     explicit UniqueArray(unsigned int size);
@@ -34,9 +34,9 @@ public:
      *
      * @pram i index to i-cell inside arr
      * @return returns pointer to the element in the i cell
-     * i case i is out of index for arr size return nullptr
+     * in case i is out of index for arr size return nullptr
      */
-    Element* get_ptr_to_elem_for_index (unsigned int i) const;
+    Element* ptrForIndex (unsigned int i) const;
 
     bool remove(const Element& element);
     unsigned int getCount() const;

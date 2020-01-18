@@ -13,8 +13,12 @@ namespace MtmParkingLot {
     using namespace ParkingLotUtils;
     using std::ostream;
 
-    // using for every time referencing to this type of template
-    typedef UniqueArray<Vehicle, Vehicle::areVehicleTheSame> partial_parking_lot;
+    /**
+     * using for every time referencing to this type of template
+     * section means a part of a parkingLot:
+     * the MOTORBIKE section, the HANDICAPPED section or the CAR section
+     */
+    typedef UniqueArray<Vehicle, Vehicle::areVehicleTheSame> parkingSection;
 
     /**
      * @brief Represents parking lot divided to 3 section
@@ -23,9 +27,9 @@ namespace MtmParkingLot {
      *
      */
     class ParkingLot {
-        partial_parking_lot bike; // MOTORBIKE section
-        partial_parking_lot handi; // HANDICAPPED section
-        partial_parking_lot car; // CAR (regular) section
+        parkingSection bike; // MOTORBIKE section
+        parkingSection handi; // HANDICAPPED section
+        parkingSection car; // CAR (regular) section
 
         /**
          * @brief auxiliary func check if a given vehicle is parking inside given parking lot and insert it if not
@@ -37,10 +41,8 @@ namespace MtmParkingLot {
          * @return ParkingResult: SUCCESS if insert, VEHICLE_ALREADY_PARKED if already in park,
          * and NO_EMPTY_SPOT if the park if full
          */
-        ParkingResult enterParkingAUX(Vehicle& current,
-                                      partial_parking_lot& park,
-                                      unsigned int& index,
-                                      VehicleType section);
+        ParkingResult enterParkingAUX(Vehicle& current, parkingSection& park,
+                                      unsigned int& index, VehicleType section);
 
         /**
          * @brief auxiliary func check if a given vehicle is parking inside given parking lot and return it by ref
@@ -51,7 +53,7 @@ namespace MtmParkingLot {
          * @return  true if current is inside park, false otherwise
          */
         bool getVehicleAUX(Vehicle& current, unsigned int& index,
-                               const partial_parking_lot& park) const ;
+                           const parkingSection& park) const ;
 
         /**
          * @brief auxiliary func check if a given vehicle is parking inside ParkingLot
@@ -62,49 +64,29 @@ namespace MtmParkingLot {
          */
         bool getVehicle(Vehicle& current, unsigned int& index) const ;
 
-        /**
-         * @brief auxiliary func print all the cars parking inside given parking lot
-         *
-         * @param os
-         * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles> we want to print
-         * @param currentType the section park represents
-         * @return  os
-         */
-        ostream& printParkingLotAux(ostream& os,
-                                    const partial_parking_lot& park, VehicleType currentType) const;
-
-
-        /**
-         * @brief adds every vehicle in the park (section in ParkingLot) into a given vector
-         *
-         * @param park section in parkingLot
-         * @param vec Vector
-         * @param sector to inform which sector is it
-         */
-        void addParkToVector(const partial_parking_lot& park, std::vector<Vehicle>& vec, VehicleType sector);
-
 
         /**
          * @brief auxiliary func calculate how much a vehicle need to pay when exiting
          *
+         * @param the_bill the final sum to pay, for parking hours, includeing parking ticket
          * @param exitTime the time the vehicle leave the parking lot
          * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles> we want to print
          * @param vehicleType the type of the vehicle that exiting
          * @param parking_num the index of the vehicle inside its parking lot section
-         * @param exiting_car_entrance_time the entrance time of the given vehicle
+         * @param X_entrance_time the entrance time of the given vehicle
          * @return  sum that the given vehicle need to pay
          */
-        unsigned int pay_day(Time exitTime, ParkingLotUtils::
-        VehicleType vehicleType, VehicleType lot, unsigned int parking_num,
-                             Time& exiting_car_entrance_time);
+        void payDay (unsigned int& the_bill , Time exitTime, VehicleType vehicleType,
+                     VehicleType lot, unsigned int parking_num,
+                     Time &X_entrance_time);
 
         /**
          * @brief auxiliary func remove a given vehicle from a given parking represents by an int
          *
-         * @param vehicleType the type of current vehicle we want to dele
+         * @param block the type of current vehicle we want to dele
          * @param parking_num represnts the index of the vehicle we want to delete inside its section
          */
-        void remove_vehicle (VehicleType vehicleType, unsigned int parking_num);
+        void removeVehicle (LicensePlate licensePlate);
 
     public:
 
