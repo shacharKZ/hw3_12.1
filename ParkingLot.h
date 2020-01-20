@@ -12,6 +12,8 @@ namespace MtmParkingLot {
 
     using namespace ParkingLotUtils;
     using std::ostream;
+    typedef const unsigned int Price; // represent amount to pay per cases
+
 
     /**
      * using for every time referencing to this type of template
@@ -64,18 +66,72 @@ namespace MtmParkingLot {
          */
         bool getVehicle(Vehicle& current, unsigned int& index) const ;
 
+        /**
+         * @brief auxiliary func to check if stay in parkingLot more than 24 hours
+         * @param initial
+         * @param final
+         * @return true if the difference between initial and final is bigger than 24 hours
+         */
+        static bool overStay(Time initial, Time final);
+
 
         /**
-         * @brief auxiliary func calculate how much a vehicle need to pay when exiting
-         *
-         * @param the_bill the final sum to pay, for parking hours, includeing parking ticket
-         * @param exitTime the time the vehicle leave the parking lot
-         * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles> we want to print
-         * @param vehicleType the type of the vehicle that exiting
-         * @param parking_num the index of the vehicle inside its parking lot section
-         * @param X_entrance_time the entrance time of the given vehicle
-         * @return  sum that the given vehicle need to pay
-         */
+        * @brief auxiliary func that uses inspection to give a ticket to who deserves
+        * @param x parkingLot section
+        * @param inspectionTime
+        * @param counter how many vehicles were given a ticket
+        */
+        static void giveTicketIfNeeded (const parkingSection &x,
+                Time inspectionTime, unsigned int &counter);
+
+        /**
+        * @brief adds every vehicle in the park (section in ParkingLot) into a given vector
+        *
+        * @param park section in parkingLot
+        * @param vec Vector
+        * @param sector to inform which sector is it
+        */
+        static void addParkToVector(const parkingSection& park,
+                std::vector<Vehicle>& vec, VehicleType sector);
+
+        /**
+        * @brief min func
+        * @param a
+        * @param b
+        * @return min between a and b
+        */
+        static unsigned int min(unsigned int a, unsigned int b);
+
+        /**
+        * @brief auxiliary func to calculate HANDICAPPED vehicle
+        * @param entrance
+        * @param exit
+        * @return price to pay in when exit the parkingLot
+        */
+        static unsigned int handiBillCalculator (Time entrance, Time exit);
+
+        /**
+        * @brief auxiliary func to calculate CAR and MOTORBIKE vehicle
+        * @param entrance
+        * @param exit
+        * @param first_hour_rate price per type
+        * @param normal_hour_rate  price per type
+        * @return price to pay in when exit the parkingLot
+        */
+        static unsigned int normalBillCalculator (Time entrance, Time exit,
+                Price first_hour_rate, Price normal_hour_rate);
+
+        /**
+        * @brief auxiliary func calculate how much a vehicle need to pay when exiting
+        *
+        * @param the_bill the final sum to pay, for parking hours, includeing parking ticket
+        * @param exitTime the time the vehicle leave the parking lot
+        * @param park an UniqueArray<Vehicle, Vehicle::CompareVehicles> we want to print
+        * @param vehicleType the type of the vehicle that exiting
+        * @param parking_num the index of the vehicle inside its parking lot section
+        * @param X_entrance_time the entrance time of the given vehicle
+        * @return  sum that the given vehicle need to pay
+        */
         void payDay (unsigned int& the_bill , Time exitTime, VehicleType vehicleType,
                      VehicleType lot, unsigned int parking_num,
                      Time &X_entrance_time);

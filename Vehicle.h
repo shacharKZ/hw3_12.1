@@ -88,6 +88,13 @@ namespace MtmParkingLot {
         void setParkingSpot(unsigned int index, VehicleType section);
 
         /**
+        * @brief get the vehicle's whereIPark
+        *
+        * @return whereIPark
+        */
+        ParkingSpot getParkingSpot();
+
+        /**
          * @brief get the vehicle's entrance time
          *
          * @return entrance_time
@@ -108,12 +115,6 @@ namespace MtmParkingLot {
          */
         const LicensePlate getLicensePlate();
 
-         /**
-         * @brief get the vehicle's whereIPark
-         *
-         * @return whereIPark
-         */
-        ParkingSpot getParkingSpot();
 
         /**
          * @brief change got_a_ticket to True, representing inspection gave the car a ticket

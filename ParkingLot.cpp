@@ -10,17 +10,19 @@ using ParkingLotUtils::ParkingSpot;
 using ParkingLotUtils::ParkingLotPrinter;
 using MtmParkingLot::parkingSection;
 using std::vector;
+using MtmParkingLot::Price;
+
 
 namespace MtmParkingLot {
-    typedef const unsigned int price;
-    price PARKING_TICKET = 250;
+    Price PARKING_TICKET = 250;
     const unsigned int MAX_HOURS_MINUS_ONE = 5;
-    price BIKE_FIRST_HOUR = 10;
-    price BIKE_OTHER_HOURS = 5;
-    price HANDI_FIXED_PRICE = 15;
-    price CAR_FIRST_HOUR = 20;
-    price CAR_OTHER_HOUR = 10;
-    const unsigned int MINUTES_PER_HOUR = 60;
+    Price BIKE_FIRST_HOUR = 10;
+    Price BIKE_OTHER_HOURS = 5;
+    Price HANDI_FIXED_PRICE = 15;
+    Price CAR_FIRST_HOUR = 20;
+    Price CAR_OTHER_HOUR = 10;
+    const unsigned int HOURS_PER_DAY = 24;
+
 
     ParkingLot::ParkingLot(unsigned int parkingBlockSizes[]) :
             bike(parkingBlockSizes[0]), handi(parkingBlockSizes[1]),
@@ -73,47 +75,6 @@ namespace MtmParkingLot {
         return NO_EMPTY_SPOT; // def return and only possible option
     }
 
-    /**
-     * @brief auxiliary func to check if stay in parkingLot more than 24 hours
-     * @param initial
-     * @param final
-     * @return true if the difference between initial and final is bigger than 24 hours
-     */
-    static bool overStay(Time initial, Time final) {
-        const Time::Hour HOURS_PER_DAY = 24;
-        Time delta = (final - initial);
-        return (delta.toHours() > HOURS_PER_DAY);
-    }
-
-    /**
-     * @brief auxiliary func that uses inspection to give a ticket to who deserves
-     * @param x parkinLot section
-     * @param inspectionTime
-     * @param counter how many vehicles were given a ticket
-     */
-    static void giveTicketIfNeeded
-            (const parkingSection &x, Time inspectionTime,
-             unsigned int &counter) {
-
-        for (unsigned int i = 0; i < x.getSize(); ++i) {
-            Vehicle *current = (x.ptrForIndex(i));
-
-            if (current != nullptr && current->didHeGotATicket() == false
-                && overStay(current->getEntranceTime(), inspectionTime)) {
-                current->giveATicket();
-                counter++;
-            }
-        }
-    }
-
-    void ParkingLot::inspectParkingLot(Time inspectionTime) {
-
-        unsigned int counter = 0;
-        giveTicketIfNeeded(bike, inspectionTime, counter);
-        giveTicketIfNeeded(handi, inspectionTime, counter);
-        giveTicketIfNeeded(car, inspectionTime, counter);
-        ParkingLotPrinter::printInspectionResult(cout, inspectionTime, counter);
-    }
 
     bool ParkingLot::getVehicleAUX(Vehicle& current, unsigned int &index,
                                    const parkingSection &park) const {
@@ -131,6 +92,36 @@ namespace MtmParkingLot {
     }
 
 
+    bool ParkingLot::overStay(Time initial, Time final) {
+        Time::Hour hoursPerDay = HOURS_PER_DAY;
+        Time delta = (final - initial);
+        return (delta.toHours() > hoursPerDay);
+    }
+
+
+    void ParkingLot::giveTicketIfNeeded (const parkingSection &x,
+            Time inspectionTime, unsigned int &counter) {
+        for (unsigned int i = 0; i < x.getSize(); ++i) {
+            Vehicle *current = (x.ptrForIndex(i));
+
+            if (current != nullptr && current->didHeGotATicket() == false
+                && overStay(current->getEntranceTime(), inspectionTime)) {
+                current->giveATicket();
+                counter++;
+            }
+        }
+    }
+
+
+    void ParkingLot::inspectParkingLot(Time inspectionTime) {
+        unsigned int counter = 0;
+        giveTicketIfNeeded(bike, inspectionTime, counter);
+        giveTicketIfNeeded(handi, inspectionTime, counter);
+        giveTicketIfNeeded(car, inspectionTime, counter);
+        ParkingLotPrinter::printInspectionResult(cout, inspectionTime, counter);
+    }
+
+
     ParkingResult ParkingLot::getParkingSpot(LicensePlate licensePlate, ParkingSpot &parkingSpot) const {
         Vehicle temp (CAR, licensePlate, Time());
         unsigned int index = 0;
@@ -143,14 +134,7 @@ namespace MtmParkingLot {
     }
 
 
-     /**
-     * @brief adds every vehicle in the park (section in ParkingLot) into a given vector
-     *
-     * @param park section in parkingLot
-     * @param vec Vector
-     * @param sector to inform which sector is it
-     */
-    static void addParkToVector(const parkingSection& park, std::vector<Vehicle>& vec, VehicleType sector) {
+     void ParkingLot::addParkToVector(const parkingSection& park, std::vector<Vehicle>& vec, VehicleType sector) {
         for (unsigned int i = 0; i < park.getSize(); ++i) {
             Vehicle *current = park.ptrForIndex(i);
             if (current != nullptr) {
@@ -160,44 +144,34 @@ namespace MtmParkingLot {
         }
     }
 
+
     ostream &operator<<(ostream &os, const ParkingLot &parkingLot) {
 
         vector<Vehicle> allVehicle;
 
-        addParkToVector(parkingLot.bike,allVehicle, MOTORBIKE);
-        addParkToVector(parkingLot.handi,allVehicle, HANDICAPPED);
-        addParkToVector(parkingLot.car,allVehicle, CAR);
+        ParkingLot::addParkToVector(parkingLot.bike,allVehicle, MOTORBIKE);
+        ParkingLot::addParkToVector(parkingLot.handi,allVehicle, HANDICAPPED);
+        ParkingLot::addParkToVector(parkingLot.car,allVehicle, CAR);
 
         sort(allVehicle.begin(), allVehicle.end());
 
         ParkingLotPrinter::printParkingLotTitle(os);
-        for (unsigned  int i = 0; i < allVehicle.size(); ++i) {
+        for (unsigned int i = 0; i < allVehicle.size(); ++i) {
             os << allVehicle[i];
         }
-
         return os;
     }
 
-    /**
-     * @brief min func
-     * @param a
-     * @param b
-     * @return min between a and b
-     */
-    static unsigned int min(unsigned int a, unsigned int b) {
+
+    unsigned int ParkingLot::min(unsigned int a, unsigned int b) {
         if (a < b) {
             return a;
         }
         return b;
     }
 
-    /**
-     * @brief auxiliary func to calculate HANDICAPPED vehicle
-     * @param entrance
-     * @param exit
-     * @return price to pay in when exit the parkingLot
-     */
-    static unsigned int handiBillCalculator (Time entrance, Time exit){
+
+    unsigned int ParkingLot::handiBillCalculator (Time entrance, Time exit){
         Time delta = exit - entrance;
         if (delta.toHours() == 0) {
             return 0;
@@ -207,16 +181,9 @@ namespace MtmParkingLot {
         }
     }
 
-    /**
-     * @brief auxiliary func to calculate CAR and MOTORBIKE vehicle
-     * @param entrance
-     * @param exit
-     * @param first_hour_rate price per type
-     * @param normal_hour_rate  price per type
-     * @return price to pay in when exit the parkingLot
-     */
-    static unsigned int normalBillCalculator (Time entrance, Time exit,
-            price first_hour_rate, price normal_hour_rate) {
+
+    unsigned int ParkingLot::normalBillCalculator (Time entrance, Time exit,
+            Price first_hour_rate, Price normal_hour_rate) {
         unsigned sum = 0;
         Time delta = exit - entrance;
         if (delta.toHours() == 0) {
@@ -227,7 +194,7 @@ namespace MtmParkingLot {
         }
         sum += first_hour_rate;
         unsigned int hours_to_pay_for =
-                min(MAX_HOURS_MINUS_ONE, (delta.toHours() - 1));
+                ParkingLot::min(MAX_HOURS_MINUS_ONE, (delta.toHours() - 1));
         for (unsigned int i = 0; i < hours_to_pay_for; ++i) {
             sum += normal_hour_rate;
         }
@@ -267,6 +234,7 @@ namespace MtmParkingLot {
         }
     }
 
+
     void ParkingLot::removeVehicle (LicensePlate licensePlate){
         Vehicle current (CAR, licensePlate, Time());
         if (bike.remove(current) || handi.remove(current)
@@ -304,4 +272,5 @@ namespace MtmParkingLot {
         ParkingLot::removeVehicle(licensePlate);
         return SUCCESS;
     }
+
 }
